@@ -1,5 +1,7 @@
 import { Client, GatewayIntentBits, REST, Routes, Events } from 'discord.js';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -7,14 +9,21 @@ const TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
 const GUILD_ID = process.env.GUILD_ID;
 
-const commands = [
-    {
-        name: 'ping',
-        description: 'Replies with Pong!',
-    },
-];
+const commands = [];
+const commandsPath = path.resolve('./commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-// Register commands (guild for fast propagation)
+const commandsMap = new Map();
+
+for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const commandModule = await import(filePath);
+    const command = commandModule.default;
+    commands.push(command.data);
+    commandsMap.set(command.data.name, command);
+}
+
+// Register commands
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 (async () => {
@@ -28,13 +37,13 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
             { body: commands }
         );
 
-        console.log('Successfully reloaded application (/) commands.');
+        console.log('Successfully reloaded application (/) commands: ' + commands.length);
     } catch (error) {
         console.error(error);
     }
 })();
 
-// Start the bot client
+// Create bot client
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 client.once(Events.ClientReady, () => {
@@ -44,8 +53,14 @@ client.once(Events.ClientReady, () => {
 client.on(Events.InteractionCreate, async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
-    if (interaction.commandName === 'ping') {
-        await interaction.reply('Pong!');
+    const command = commandsMap.get(interaction.commandName);
+    if (!command) return;
+
+    try {
+        await command.execute(interaction);
+    } catch (error) {
+        console.error(error);
+        await interaction.reply({ content: 'There was an error executing this command!', ephemeral: true });
     }
 });
 
