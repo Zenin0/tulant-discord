@@ -1,5 +1,7 @@
 import { PermissionFlagsBits } from 'discord.js';
 
+let constants = require('../lib/constants');constants
+
 export default {
     data: {
         name: 'ban',
@@ -7,13 +9,13 @@ export default {
         options: [
             {
                 name: 'user',
-                type: 6, // USER type
+                type: constants.USER,
                 description: 'Miembro a banear',
                 required: true,
             },
             {
                 name: 'reason',
-                type: 3, // STRING type
+                type: constants.STRING,
                 description: 'Razón del baneo',
                 required: false,
             },
