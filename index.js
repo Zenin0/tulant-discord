@@ -59,7 +59,13 @@ async function main() {
     }
 
     // Create Discord bot client
-    const client = new Client({intents: [GatewayIntentBits.Guilds]});
+    const client = new Client({
+        intents: [
+            GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMessages,    // To receive message events
+            GatewayIntentBits.MessageContent,    // To access message content (required in v14+)
+        ],
+    });
 
     client.once(Events.ClientReady, async () => {
         logger.info(`🤖 Logged in as ${client.user.tag}`);
@@ -72,6 +78,21 @@ async function main() {
             });
         }
     });
+
+    const listenersPath = path.resolve('./listeners');
+    const listenerFiles = fs.readdirSync(listenersPath).filter(file => file.endsWith('.js'));
+    for (const file of listenerFiles) {
+        const filePath = path.join(listenersPath, file);
+        const listenerModule = await import(filePath);
+        const listener = listenerModule.default;
+
+        if (listener.once) {
+            client.once(listener.name, (...args) => listener.execute(db, ...args));
+        } else {
+            client.on(listener.name, (...args) => listener.execute(db, ...args));
+        }
+
+    }
 
     client.on(Events.InteractionCreate, async interaction => {
         if (!interaction.isChatInputCommand()) return;
