@@ -1,22 +1,31 @@
 import { PermissionFlagsBits } from 'discord.js';
-
 import constants from '../lib/constants.js';
+import locales from "../lib/locales.js";
 
 export default {
     data: {
         name: 'ban',
-        description: 'Banear a un miembro del servidor',
+        description: 'Ban a server member',
+        description_localizations: {
+            [locales.SPANISH]: 'Banear un usuario del servidor',
+        },
         options: [
             {
                 name: 'user',
                 type: constants.USER,
-                description: 'Miembro a banear',
+                description: 'Member to ban',
+                description_localizations: {
+                    [locales.SPANISH]: 'Miembro a banear',
+                },
                 required: true,
             },
             {
                 name: 'reason',
                 type: constants.STRING,
-                description: 'Razón del baneo',
+                description: 'Ban reason',
+                description_localizations: {
+                    [locales.SPANISH]: 'Razón del baneo',
+                },
                 required: false,
             },
         ],
@@ -24,20 +33,29 @@ export default {
     },
     async execute(interaction) {
         const user = interaction.options.getUser('user');
-        const reason = interaction.options.getString('reason') || 'No se especificó una razón';
+        const reason = interaction.options.getString('reason') || locales.get('NO_REASON_SPECIFIED', interaction.locale);
 
         // Obtener el miembro del guild
         const member = await interaction.guild.members.fetch(user.id).catch(() => null);
 
         if (!member) {
-            return interaction.reply({ content: 'Ese usuario no está en el servidor.', ephemeral: true });
+            return interaction.reply({
+                content: locales.get('USER_NOT_IN_GUILD', interaction.locale),
+                flags: 64,  // ephemeral
+            });
         }
 
         if (!member.bannable) {
-            return interaction.reply({ content: 'No puedo banear a este usuario (rol más alto o falta de permisos).', ephemeral: true });
+            return interaction.reply({
+                content: locales.get('CANNOT_BAN_USER', interaction.locale),
+                flags: 64,
+            });
         }
 
         await member.ban({ reason });
-        await interaction.reply(`Usuario baneado correctamente: ${user.tag}\nRazón: ${reason}`);
+
+        return interaction.reply(
+            locales.get('USER_BANNED', interaction.locale, { userTag: user.tag, reason })
+        );
     },
 };

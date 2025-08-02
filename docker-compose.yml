@@ -1,0 +1,29 @@
+services:
+  discord-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: discord-bot
+    restart: unless-stopped
+    env_file: .env
+    working_dir: /app
+    volumes:
+      - .:/app
+    depends_on:
+      - mongodb
+    command: node index.js
+
+  mongodb:
+    image: mongo:latest
+    container_name: discord-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    ports:
+      - "${MONGO_PORT}:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

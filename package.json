@@ -4,8 +4,9 @@
   "main": "index.js",
   "type": "module",
   "dependencies": {
-    "discord.js": "^14.0.0",
-    "dotenv": "^16.0.0",
-    "node-fetch": "^3.3.1"
+    "discord.js": "latest",
+    "dotenv": "latest",
+    "node-fetch": "latest",
+    "mongodb": "latest"
   }
 }
