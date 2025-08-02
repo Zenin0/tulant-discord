@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import {MongoClient} from 'mongodb';
 import {saveGuild} from "./mongodb/saveGuild.js";
+import logger from './lib/log.js';
 
 dotenv.config();
 
@@ -36,14 +37,14 @@ async function main() {
     const mongoUri = `mongodb://${MONGO_USER}:${MONGO_PASS}@${MONGO_HOST}:${MONGO_PORT}`;
     const mongoClient = new MongoClient(mongoUri);
     await mongoClient.connect();
-    console.log('✅ Connected to MongoDB');
+    logger.info("Connected to MongoDB")
     const db = mongoClient.db(MONGO_DB);
 
     // Register commands
     const rest = new REST({version: '10'}).setToken(TOKEN);
 
     try {
-        console.log('Started refreshing application (/) commands.');
+        logger.info('Started refreshing application (/) commands.');
 
         await rest.put(
             GUILD_ID
@@ -52,16 +53,16 @@ async function main() {
             {body: commands}
         );
 
-        console.log('Successfully reloaded application (/) commands: ' + commands.length);
+        logger.info('Successfully reloaded application (/) commands: ' + commands.length);
     } catch (error) {
-        console.error('Failed to register commands:', error);
+        logger.error('Failed to register commands:', error);
     }
 
     // Create Discord bot client
     const client = new Client({intents: [GatewayIntentBits.Guilds]});
 
     client.once(Events.ClientReady, async () => {
-        console.log(`🤖 Logged in as ${client.user.tag}`);
+        logger.info(`🤖 Logged in as ${client.user.tag}`);
 
         for (const guild of client.guilds.cache.values()) {
             await saveGuild(db, {
@@ -70,8 +71,6 @@ async function main() {
                 joinedAt: guild.joinedTimestamp ? new Date(guild.joinedTimestamp) : new Date(),
             });
         }
-
-        console.log('✅ All guilds saved to DB');
     });
 
     client.on(Events.InteractionCreate, async interaction => {
@@ -84,7 +83,7 @@ async function main() {
         try {
             await command.execute(interaction, db);
         } catch (error) {
-            console.error(error);
+            logger.error(error);
             if (!interaction.replied) {
                 await interaction.reply({content: 'There was an error executing this command!', ephemeral: true});
             }
