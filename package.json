@@ -7,6 +7,8 @@
     "discord.js": "latest",
     "dotenv": "latest",
     "node-fetch": "latest",
-    "mongodb": "latest"
+    "mongodb": "latest",
+    "eslint": "latest",
+    "prettier": "latest"
   }
 }
