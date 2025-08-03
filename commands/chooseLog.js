@@ -32,7 +32,12 @@ export default {
                     {
                         name: 'Log',
                         value: 'log',
-                    }
+                    },
+                    {
+                        name: 'Welcome/Goodbye',
+                        value: 'wb',
+                    },
+
                 ],
             }
         ],

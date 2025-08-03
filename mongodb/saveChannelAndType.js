@@ -27,5 +27,7 @@ function getTypeByValue(value) {
     switch (value) {
         case 'log':
             return 1
+        case 'wb':
+            return 2
     }
 }

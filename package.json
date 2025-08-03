@@ -6,9 +6,7 @@
   "dependencies": {
     "discord.js": "latest",
     "dotenv": "latest",
-    "node-fetch": "latest",
     "mongodb": "latest",
-    "eslint": "latest",
-    "prettier": "latest"
+    "node-fetch": "latest"
   }
 }

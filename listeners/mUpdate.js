@@ -1,13 +1,14 @@
 import {EmbedBuilder, Events} from 'discord.js';
 import {getChannelByGuildAndType} from "../mongodb/getChannelByGuildAndType.js";
 import logger from "../lib/log.js";
+import constants from "../lib/constants.js";
 
 export default {
     name: Events.MessageUpdate,
     once: false,
     async execute(db, oldMessage, newMessage) {
         // Fetch the log channel ID for this guild and type
-        const response = await getChannelByGuildAndType(db, 1, oldMessage.guildId);
+        const response = await getChannelByGuildAndType(db, constants.CHANNEL_TYPE_LOG, oldMessage.guildId);
         const channelId = response?.channelId;
         if (!channelId) {
             logger.warn('No log channel found for this guild and type');
@@ -27,13 +28,25 @@ export default {
             .setTitle("Message Edited")
             .setColor(0xffa500) // red color
             .addFields(
-            { name: "", value: `> **Channel**: <#${oldMessage.channel.id}> \n> **Message **: ${oldMessage.id} \n> **Author**: <@${oldMessage.author.id}>\n> **Message created**: <t:${Math.floor(oldMessage.createdTimestamp / 1000)}:R>`, inline: false },
-                  { name: "Before", value: `${oldMessage.content}`, inline: false },
-                  { name: "After", value: `${newMessage.content}`, inline: false },
+                {
+                    name: "",
+                    value: `> **Channel**: ${oldMessage.channel.name} (<#${oldMessage.channel.id}>)\n> **Message ID**: ${oldMessage.id}\n> **Message author**: @${oldMessage.author.tag} (<@${oldMessage.author.id}>)\n> **Message created**: <t:${Math.floor(oldMessage.createdTimestamp / 1000)}:R>`,
+                    inline: false
+                },
+                {
+                    name: "Before",
+                    value: `${oldMessage.content}`,
+                    inline: true
+                },
+                {
+                    name: "After",
+                    value: `${newMessage.content}`,
+                    inline: true
+                },
             )
             .setTimestamp();
 
         // Send the embed
-        await logChannel.send({ embeds: [embed] });
+        await logChannel.send({embeds: [embed]});
     }
 };

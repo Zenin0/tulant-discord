@@ -1,13 +1,14 @@
-import { Events, EmbedBuilder } from "discord.js";
-import { getChannelByGuildAndType } from "../mongodb/getChannelByGuildAndType.js";
+import {Events, EmbedBuilder} from "discord.js";
+import {getChannelByGuildAndType} from "../mongodb/getChannelByGuildAndType.js";
 import logger from "../lib/log.js";
+import constants from "../lib/constants.js";
 
 export default {
     name: Events.MessageDelete,
     once: false,
     async execute(db, message) {
         // Fetch the log channel ID for this guild and type
-        const response = await getChannelByGuildAndType(db, 1, message.guildId);
+        const response = await getChannelByGuildAndType(db, constants.CHANNEL_TYPE_LOG, message.guildId);
         const channelId = response?.channelId;
         if (!channelId) {
             logger.warn('No log channel found for this guild and type');
@@ -27,12 +28,16 @@ export default {
             .setTitle("Message deleted")
             .setColor(0xff0000) // red color
             .addFields(
-                { name: "", value: `> **Channel** <#${message.channel.id}> \n> **Message ID**: ${message.id} \n> **Author**: <@${message.author.id}>\n> **Message created**: <t:${Math.floor(message.createdTimestamp / 1000)}:R>`, inline: false },
-                { name: "Message", value: `${message.content}`, inline: false },
+                {
+                    name: "",
+                    value: `> **Channel**: ${message.channel.name} <#${message.channel.id}>\n> **Message ID**: ${message.id}\n> **Message author**: @${message.author.tag} (<@${message.author.id}>)\n> **Message created**: <t:${Math.floor(message.createdTimestamp / 1000)}:R>`,
+                    inline: false
+                },
+                {name: "Message", value: `${message.content}`, inline: false},
             )
             .setTimestamp();
 
         // Send the embed
-        await logChannel.send({ embeds: [embed] });
+        await logChannel.send({embeds: [embed]});
     }
 };
